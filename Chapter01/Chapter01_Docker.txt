@@ -1,0 +1,200 @@
+How to Install and Use Docker on Ubuntu 20.04
+
+Introduction
+The function of Docker as an application is to simplify the process of managing application processes in containers , allowing you to run your applications through resource-isolated processes. They have similarities to virtual machines, but containers are more portable, resource-friendly, and more dependent in terms of the host operating system.
+
+In this guide, you will install and use Docker Community Edition (CE) on Ubuntu 20.04. You will install Docker itself, manipulate containers and images, and then place an image in a Docker Repository.
+
+Step 1: Install Docker
+
+The Docker installer package available in the official Ubuntu repository is probably not a recent version. To make sure we get the latter, we'll install Docker from the official Docker repository. For this we will add a new package source, so install the package after adding the Docker GPG key to ensure valid downloads.
+
+Before you begin, you'll need to update your existing package list:
+
+	$ sudo apt-get update
+
+Next, to allow apt to use packages over HTTPS, you'll need to install a few prerequisite packages:
+
+$ sudo apt install apt-transport-https ca-certificates curl software-properties-common
+Now add the GPG key to your system's official Docker repository:
+
+	$ sudo mkdir -p /etc/apt/keyrings
+	$  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+Now add the Docker repository to the APT sources:
+
+	$ echo \
+  	"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  	$(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  	
+Now go ahead and update the package database using the newly added Docker packages from the repository:
+
+	$ sudo apt-get update
+Verify that you will be installing from the Docker repository and not from the default Ubuntu repository:
+
+	$ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+Docker is now installed, the daemon started and the process enabled so it can start on boot. Check that it is running:
+
+	$ sudo systemctl status docker
+	
+
+Step 2 – Run Docker command without sudo (Not Required)
+
+By default, the docker command cannot be run by any user other than the root user or a user in the docker group , which is created by default during the Docker installation process.
+To avoid having to type sudo every time you run the docker command , you need to add your username to the docker group :
+
+	$ sudo usermod -aG docker ${USER}
+Log out of the server and log back in or type the following to apply the new group affiliation:
+
+	$ su - ${USER}
+To continue, you will be asked to enter your user's password.
+
+Type the following to confirm that your user is now added to the docker group :
+
+	$ id -nG
+If needed, you can explicitly declare the username of the user you need to add to the docker group you are not logged in with, using:
+
+	$ sudo usermod -aG docker username
+The rest of this guide is based on you running the docker command as a user in the docker group . If you prefer not to, go ahead and add the commands with sudo.
+
+
+Step 3 – Use Docker command
+
+Using docker means passing it over a string of options and commands after which will come arguments. The syntax looks like the following:
+
+	$ docker [option] [command] [arguments]
+	$ docker -v
+To view all available subcommands, type:
+
+	$ docker
+The full list of all possible subcommands includes.
+
+
+To view the possible options for a specific command, type:
+
+	$ docker docker-subcommand --help
+To view system-wide information about Docker, type:
+
+	$ docker info
+In this next step, we will explore some of these images.
+
+
+Step 4: Manage Docker Images
+
+Docker images are used to create Docker containers. Docker pulls these images from Docker Hub by default, which is a Docker registry managed by Docker. It's possible for anyone to use Docker Hub to host their images, so the vast majority of Linux apps and distros you'll need will have images hosted there.
+
+To check if you have access and can download the images found on Docker Hub, type:
+
+	$ docker run hello-world
+Docker was initially unable to find the hello-world image locally, so it proceeded to download it from Docker Hub, which is the default repository. Once the image was downloaded, Docker created a container from it and ran the application inside the container, while finally displaying the message.
+
+You can find the images available on Docker Hub using the docker command and the search subcommand . For example, to find the Ubuntu image, you would type:
+
+	$ docker search ubuntu
+The script will go to Docker Hub and display a list of all images whose name matches the search query
+Once you have selected the image you are going to use, you can download it to your computer using the pull subcommand .
+
+	$ docker pull ubuntu
+Once an image has been downloaded, you can run a container using the downloaded image with the run subcommand . As you saw with the hello-world example , if an image has not been downloaded when docker is run with the run subcommand , the Docker client will first download the image and then run a container in using it.
+
+To view images downloaded to your computer, type the following:
+
+	$ docker images
+
+You will see later in this tutorial how you can modify the images you use to run containers and use them to generate new images which can then be pushed (push is the technical term) into Docker Hub or other Docker registries.
+
+Step 5: Run a Container in Docker
+
+The hello-world container you ran in the last step is an example of a container that, after issuing a test message, will run and exit. Containers can be more useful than that, as well as interactive. They work much like virtual machines, the only difference is that they are more resource-friendly.
+
+As an example, let's run a container and use the most recent Ubuntu image. Combining the -i and -t switches will give you interactive shell access to the container:
+
+	$ docker run -it ubuntu
+
+Now you can run any command inside the container. For example, when updating the package database inside the container, you won't need to prefix a command with sudo , because you're working inside the container as a user root :
+
+	root@a9bb67c47592:/# apt update
+	
+Now go ahead and install any application in it, Node.js for example:
+
+	root@a9bb67c47592:/# apt install nodejs
+
+This will install Node.js in the container found in the official Ubuntu repository. Once installed, check it via:
+
+	root@a9bb67c47592:/# node -v
+
+The version number will be displayed in your terminal.
+Type exit at the prompt to leave the container.
+
+
+Step 6 – Manage Containers in Docker
+
+After you have been on Docker for a while, you will notice that there are many active (running) and inactive containers on your computer. To view assets , use:
+
+	$ docker ps
+
+Pass the -l switch to view the last container you created:
+
+	$ docker ps -l
+
+Use docker stop to stop a running container, followed by its ID or name. This time, we'll use the name Docker gave the container, which is quizzical_mcnulty :
+
+	$ docker stop magical_shirley
+	
+When you no longer need a container, you can remove it with the docker rm command , this time also using either the container's ID or its name. Use the docker ps -a command to find the container name or ID associated with the hello-world image and delete it.
+
+	$ docker rm wonderful_raman
+	
+You can create a new container and name it using the –name switch . It is also possible to use the –rm switch to start a container that kills itself when stopped. See the docker run help command for more information on these and other options.
+
+Containers can be turned into images which can be used to create new containers.
+
+
+
+Step 7: Make Changes Inside a Container to an Image on Docker
+
+You can create, modify and delete files like with a virtual machine when you start a Docker image. The changes you make will apply to this container only. You can start and stop it, but once you use the docker rm command to destroy it, the changes will be permanently lost.
+
+This part will show you how to save the state of a container as a new Docker image.
+
+Once you installed Node.js in the Ubuntu container, you now have one running from an image, but the container is not the same as the image you used to create it . But you might want to use this Node.js container another time as a base for new images later.
+
+Next, make the changes to a new Docker image instance with the following command.
+
+	$ docker commit -m "What you did to the image" -a "Author Name" container_id repository/new_image_name
+
+The Switch -mis tied to the commit message which helps you and others identify the changes you have made, however -a is used to specify the author. container_id is the one you saw earlier in this guide when you launched the interactive Docker session. référentiel is usually your Docker Hub username, unless you have created new repositories on Docker Hub.
+
+For example, for the Ubuntu user whose container ID is a9bb67c47592 , the command would be:
+
+	$ docker commit -m "added Node.js" -a "ubuntu" a9bb67c47592 ubuntu/ubuntu-nodejs
+
+Once you validate an image, the new one is saved locally on your computer. You will learn later in this guide how to push an image to a Docker registry such as Docker Hub so other people can access it.
+
+Listing Docker images will visualize both the new and the old ones they come from:
+
+	$ docker images
+
+
+You can also create images from a Dockerfile which allows you to automate the installation of software into a new image. However, that has nothing to do with this guide.
+
+Step 8: Push a Docker Image to a Docker Repository
+
+The obvious next step after creating a new image from an existing one is to share it with a few people you select, the general public on Docker Hub or another Docker registry you can access. To push an image to Docker Hub or any other Docker registry, you must have an account there.
+
+To do this, you must first log in to Docker Hub.
+
+	$ docker login -u docker-registry-username
+You will be prompted to authenticate using your Docker Hub password.
+
+Note: If your Docker registry username differs from the local username you used to create the image, you will need to identify your image with your registry username. In the case of the last example, you would type:
+
+	$ docker tag ubuntu/ubuntu-nodejs docker-registry-username/ubuntu-nodejs
+Then you can push your own image using:
+
+	$ docker push docker-registry-username/docker-image-name
+To push the ubuntu-nodejs image to the Ubuntu repository, use the following command:
+
+	$ docker push ubuntu/ubuntu-nodejs
+
+
+

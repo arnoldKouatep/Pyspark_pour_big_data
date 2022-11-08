@@ -1,0 +1,101 @@
+******************Installing Apache Spark on Ubuntu 20.04 or 18.04************************
+
+1. Install Java with other dependencies
+Here we are installing the latest available version of Jave that is the requirement of Apache Spark along with some other things – Git and Scala to extend its capabilities.
+
+	$ sudo apt install default-jdk scala git
+ 
+
+2. Download Apache Spark on Ubuntu 20.04
+Now, visit the Spark official website and download the latest available version of it.  However, while writing this tutorial the latest version was 3.1.2. Hence, here we are downloading the same, in case it is different when you are performing the Spark installation on your Ubuntu system, go for that. Simply copy the download link of this tool and use it with wget or directly download on your system.
+
+	$ wget https://downloads.apache.org/spark/spark-3.1.2/spark-3.1.2-bin-hadoop3.2.tgz
+ 
+
+3. Extract Spark to /opt
+To make sure we don’t delete the extracted folder accidentally, let’s place it somewhere safe i.e /opt directory.
+
+	$ sudo mkdir /opt/spark
+	$ sudo tar -xf spark*.tgz -C /opt/spark --strip-component 1
+Also, change the permission of the folder, so that Spark can write inside it.
+
+	$ sudo chmod -R 777 /opt/spark
+ 
+
+4. Add Spark folder to the system path
+Now, as we have moved the file to /opt directory, to run the Spark command in the terminal we have to mention its whole path every time which is annoying. To solve this, we configure environment variables for Spark by adding its home paths to the system’s a profile/bashrc file. This allows us to run its commands from anywhere in the terminal regardless of which directory we are in.
+
+	$ echo "export SPARK_HOME=/opt/spark" >> ~/.bashrc
+	$ echo "export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin" >> ~/.bashrc
+	$ echo "export PYSPARK_PYTHON=/usr/bin/python3" >> ~/.bashrc
+	
+Reload shell:
+
+	$ source ~/.bashrc
+ 
+
+5.  Start Apache Spark master server on Ubuntu
+As we already have configured variable environment for Spark, now let’s start its standalone master server by running its script:
+
+	$ start-master.sh
+Note : If you want to use a custom port then that is possible to use, options or arguments given below.
+–port  – Port for service to listen on (default: 7077 for master, random for worker)
+–webui-port  – Port for web UI (default: 8080 for master, 8081 for worker)
+
+Example– I want to run Spark web UI on 8082, and make it listen to port 7072 then the command to start it will be like this:
+
+	$ start-master.sh --port 7072 --webui-port 8082
+
+6. Access Spark Master (spark://Ubuntu:7077) – Web interface
+Now, let’s access the web interface of the Spark master server that running at port number 8080. So, in your browser open http://127.0.0.1:8080.
+
+Our master is running at spark://Ubuntu:7077, where Ubuntu is the system hostname and could be different in your case.
+
+If you are using a CLI server and want to use the browser of the other system that can access the server Ip-address, for that first open 8080 in the firewall. This will allow you to access the Spark web interface remotely at – http://your-server-ip-addres:8080
+
+sudo ufw allow 8080
+ 
+
+7. Run Slave Worker Script
+To run Spark slave worker, we have to initiate its script available in the directory we have copied in /opt. The command syntax will be:
+
+Command syntax:
+
+	$ start-worker.sh spark://hostname:port
+
+In the above command change the hostname and port. If you don’ know your hostname then simply type- hostname in terminal. Where the default port of master is running on is 7077, you can see in the above screenshot.
+
+So, as our hostname is ubuntu, the command will be like this:
+
+	start-worker.sh spark://ubuntu:7077
+
+Refresh the Web interface and you will see the Worker ID and the amount of memory allocated to it:
+If you want then, you can change the memory/ram allocated to the worker. For that, you have to restart the worker with the amount of RAM you want to provide it.
+
+	$ stop-worker.sh
+
+	$ start-worker.sh -m 212M spark://ubuntu:7077
+ 
+
+Use Spark Shell
+Those who want to use Spark shell to start programming can access it by directly typing:
+
+	$ spark-shell
+To see the supported options, type- :help and to exit shell use – :quite
+
+You have installed Apache Spark on your server. You can now access the main dashboard begin managing your clusters.
+
+Server Start and Stop commands
+If you want to start or stop master/workers instances, then use the corresponding scripts:
+
+	$ stop-master.sh
+
+	$ stop-worker.sh
+To stop all at once
+
+	$ stop-all.sh
+Or start all at once:
+
+	$ start-all.sh
+
+
